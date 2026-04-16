@@ -137,3 +137,8 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Local instruction/spec docs
+SPEC.md
+claude.md
+cursor.md
