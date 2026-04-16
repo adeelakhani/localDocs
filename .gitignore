@@ -142,3 +142,6 @@ vite.config.ts.timestamp-*
 SPEC.md
 claude.md
 cursor.md
+
+# Local scratch workspace
+tmp/
