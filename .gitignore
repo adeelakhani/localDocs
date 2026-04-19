@@ -145,3 +145,6 @@ cursor.md
 
 # Local scratch workspace
 tmp/
+
+# Crawlee local storage (moved to ~/.localdocs/crawlee-storage in production)
+storage/
