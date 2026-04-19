@@ -15,6 +15,8 @@ export async function crawlWithCheerio(rootUrl: string): Promise<CheerioCrawlRes
     maxRequestsPerCrawl: 500,
     async requestHandler({ request, $, enqueueLinks }) {
       const url = request.loadedUrl ?? request.url
+      const rootOrigin = new URL(rootUrl).origin
+      if (new URL(url).origin !== rootOrigin) return
 
       const appShell = $('[id="root"], [id="__next"], [id="app"], [id="__nuxt"]')
       const isJsRendered = appShell.length > 0 && appShell.text().trim().length === 0

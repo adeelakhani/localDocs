@@ -10,7 +10,12 @@ export async function fetchSitemap(rootUrl: string): Promise<CrawledUrl[] | null
 
     if (sites.length === 0) return null
 
-    return sites.map(url => ({ url, depth: getDepth(url) }))
+    const rootOrigin = new URL(rootUrl).origin
+    const filtered = sites.filter(url => {
+      try { return new URL(url).origin === rootOrigin } catch { return false }
+    })
+
+    return filtered.map(url => ({ url, depth: getDepth(url) }))
   } catch {
     return null
   }

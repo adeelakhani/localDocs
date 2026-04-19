@@ -31,15 +31,3 @@ export async function crawl(rootUrl: string): Promise<CrawledUrl[]> {
 
   return cheerioResults
 }
-
-// --- test ---
-const rootUrl = 'https://codepen.io'
-console.log(`Crawling ${rootUrl}\n`)
-
-const results = await crawl(rootUrl)
-
-console.log(`\nTotal: ${results.length} URLs\n`)
-results.slice(0, 20).forEach(({ url, depth }) => {
-  const indent = '  '.repeat(depth)
-  console.log(`${indent}[depth ${depth}] ${url}`)
-})
