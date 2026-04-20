@@ -25,7 +25,7 @@ export function extractPage(html: string, url: string): ExtractedPage | null {
     if (text.length > 0) {
       return {
         title: article.title ?? '',
-        content: text,
+        content: cleanContent(text),
         headings,
       }
     }
@@ -33,10 +33,11 @@ export function extractPage(html: string, url: string): ExtractedPage | null {
 
   // fallback: Cheerio grabs <main>, <article>, or <body>
   const $ = cheerio.load(html)
-  const content =
+  const content = cleanContent(
     $('main').text().trim() ||
     $('article').text().trim() ||
     $('body').text().trim()
+  )
 
   const title = $('title').text().trim() || $('h1').first().text().trim()
 
@@ -51,9 +52,21 @@ function extractHeadings(html: string): Heading[] {
 
   $('h1, h2, h3').each((_, el) => {
     const level = parseInt(el.tagName.replace('h', ''))
-    const text = $(el).text().trim()
+    const raw = $(el).text().trim()
+
+    // drop headings containing newlines — these are always logos or nav elements, not real headings
+    if (raw.includes('\n')) return
+
+    // strip trailing anchor link symbol
+    const text = raw.replace(/\s*#$/, '')
+
     if (text) headings.push({ level, text })
   })
 
   return headings
+}
+
+function cleanContent(content: string): string {
+  // strip known UI strings that appear at the very start of content
+  return content.replace(/^Read as Markdown\s*/i, '').trim()
 }
