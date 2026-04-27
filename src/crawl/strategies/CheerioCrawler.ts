@@ -10,13 +10,18 @@ export async function crawlWithCheerio(rootUrl: string): Promise<CheerioCrawlRes
   const found = new Map<string, number>()
   const jsFlagged: string[] = []
 
+  const rootParsed = new URL(rootUrl)
+  const rootOrigin = rootParsed.origin
+  const rootPath = rootParsed.pathname.replace(/\/$/, '')
+
   const crawler = new CheerioCrawler({
     maxConcurrency: 5,
     maxRequestsPerCrawl: 500,
     async requestHandler({ request, $, enqueueLinks }) {
       const url = request.loadedUrl ?? request.url
-      const rootOrigin = new URL(rootUrl).origin
-      if (new URL(url).origin !== rootOrigin) return
+      const parsed = new URL(url)
+      if (parsed.origin !== rootOrigin) return
+      if (!parsed.pathname.startsWith(rootPath === '' ? '/' : rootPath)) return
 
       const appShell = $('[id="root"], [id="__next"], [id="app"], [id="__nuxt"]')
       const isJsRendered = appShell.length > 0 && appShell.text().trim().length === 0
@@ -27,8 +32,17 @@ export async function crawlWithCheerio(rootUrl: string): Promise<CheerioCrawlRes
         return
       }
 
-      found.set(url, getDepth(url))
-      await enqueueLinks({ strategy: 'same-origin' })
+      found.set(url, getDepth(url, rootPath))
+      await enqueueLinks({
+        strategy: 'same-origin',
+        transformRequestFunction: req => {
+          try {
+            const u = new URL(req.url)
+            if (!u.pathname.startsWith(rootPath === '' ? '/' : rootPath)) return false
+          } catch { return false }
+          return req
+        },
+      })
     },
   })
 
@@ -40,7 +54,8 @@ export async function crawlWithCheerio(rootUrl: string): Promise<CheerioCrawlRes
   }
 }
 
-function getDepth(url: string): number {
+function getDepth(url: string, rootPath: string): number {
   const path = new URL(url).pathname
-  return path.split('/').filter(segment => segment.length > 0).length
+  const relative = path.slice(rootPath.length)
+  return relative.split('/').filter(segment => segment.length > 0).length
 }

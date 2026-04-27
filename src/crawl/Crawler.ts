@@ -8,6 +8,8 @@ export interface CrawledUrl {
 }
 
 export async function crawl(rootUrl: string): Promise<CrawledUrl[]> {
+  const rootPath = new URL(rootUrl).pathname.replace(/\/$/, '')
+
   // 1. try sitemap first
   console.log(`Checking sitemap...`)
   const sitemapResults = await fetchSitemap(rootUrl)
@@ -24,7 +26,7 @@ export async function crawl(rootUrl: string): Promise<CrawledUrl[]> {
   // 3. re-fetch JS-rendered pages with Playwright
   if (jsFlaggedUrls.length > 0) {
     console.log(`Re-fetching ${jsFlaggedUrls.length} JS-rendered pages with Playwright...`)
-    const playwrightResults = await crawlWithPlaywright(jsFlaggedUrls)
+    const playwrightResults = await crawlWithPlaywright(jsFlaggedUrls, rootPath)
     console.log(`✓ Playwright found — ${playwrightResults.length} URLs`)
     return [...cheerioResults, ...playwrightResults]
   }

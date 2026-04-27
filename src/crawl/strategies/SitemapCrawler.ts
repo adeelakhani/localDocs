@@ -10,18 +10,25 @@ export async function fetchSitemap(rootUrl: string): Promise<CrawledUrl[] | null
 
     if (sites.length === 0) return null
 
-    const rootOrigin = new URL(rootUrl).origin
+    const rootParsed = new URL(rootUrl)
+    const rootOrigin = rootParsed.origin
+    const rootPath = rootParsed.pathname.replace(/\/$/, '')
+
     const filtered = sites.filter(url => {
-      try { return new URL(url).origin === rootOrigin } catch { return false }
+      try {
+        const u = new URL(url)
+        return u.origin === rootOrigin && u.pathname.startsWith(rootPath === '' ? '/' : rootPath)
+      } catch { return false }
     })
 
-    return filtered.map(url => ({ url, depth: getDepth(url) }))
+    return filtered.map(url => ({ url, depth: getDepth(url, rootPath) }))
   } catch {
     return null
   }
 }
 
-function getDepth(url: string): number {
+function getDepth(url: string, rootPath: string): number {
   const path = new URL(url).pathname
-  return path.split('/').filter(segment => segment.length > 0).length
+  const relative = path.slice(rootPath.length)
+  return relative.split('/').filter(segment => segment.length > 0).length
 }
