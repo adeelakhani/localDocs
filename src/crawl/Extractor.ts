@@ -10,6 +10,7 @@ export interface Heading {
 export interface ExtractedPage {
   title: string
   content: string
+  htmlContent: string   // Readability HTML — used by Chunker to split at heading tags
   headings: Heading[]
 }
 
@@ -26,6 +27,7 @@ export function extractPage(html: string, url: string): ExtractedPage | null {
       return {
         title: article.title ?? '',
         content: cleanContent(text),
+        htmlContent: article.content ?? '',
         headings,
       }
     }
@@ -43,7 +45,7 @@ export function extractPage(html: string, url: string): ExtractedPage | null {
 
   if (!content) return null
 
-  return { title, content, headings }
+  return { title, content, htmlContent: '', headings }
 }
 
 function extractHeadings(html: string): Heading[] {

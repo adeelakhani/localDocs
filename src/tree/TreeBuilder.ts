@@ -4,6 +4,7 @@ import type { ExtractedPage } from '../crawl/Extractor.js'
 export interface TreeNode {
   id: string
   text: string
+  treePath: string
   url: string | null
   children: TreeNode[]
 }
@@ -30,9 +31,13 @@ export function buildTree(pages: PageData[], sourceId: string): TreeNode[] {
 
     if (nodeMap.has(pathKey)) return nodeMap.get(pathKey)!
 
+    const text = humanize(segments[index]!)
+    const treePath = segments.slice(0, index + 1).map(s => humanize(s)).join(' > ')
+
     const node: TreeNode = {
       id: nodeId(sourceId, pathKey),
-      text: humanize(segments[index]!),
+      text,
+      treePath,
       url: null,
       children: [],
     }
@@ -53,7 +58,6 @@ export function buildTree(pages: PageData[], sourceId: string): TreeNode[] {
     const segments = new URL(page.url).pathname.split('/').filter(s => s.length > 0)
     if (segments.length === 0) continue
 
-    // ensure all ancestor container nodes exist
     for (let i = 0; i < segments.length - 1; i++) {
       getOrCreateContainer(segments, i)
     }
@@ -63,21 +67,24 @@ export function buildTree(pages: PageData[], sourceId: string): TreeNode[] {
     if (!leafSegment) continue
     const existing = nodeMap.get(pathKey)
 
+    const pageTreePath = segments.map(s => humanize(s)).join(' > ')
+
     const headingChildren: TreeNode[] = page.headings.map((h, i) => ({
       id: nodeId(sourceId, pathKey + ':' + i + ':' + h.text),
       text: h.text,
+      treePath: pageTreePath + ' > ' + h.text,
       url: null,
       children: [],
     }))
 
     if (existing) {
-      // was created as a container node, upgrade it to a real page node
       existing.url = page.url
       existing.children = headingChildren
     } else {
       const leafNode: TreeNode = {
         id: nodeId(sourceId, pathKey),
         text: humanize(leafSegment),
+        treePath: pageTreePath,
         url: page.url,
         children: headingChildren,
       }
