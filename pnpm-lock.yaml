@@ -17,6 +17,9 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
+      apache-arrow:
+        specifier: ^18.1.0
+        version: 18.1.0
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
