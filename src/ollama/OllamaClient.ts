@@ -29,4 +29,12 @@ export async function checkHealth(): Promise<void> {
   console.log(`✓ ${CHAT_MODEL} available`)
 }
 
-await checkHealth()
+export async function embed(text: string): Promise<number[]> {
+  const response = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: EMBEDDING_MODEL, prompt: text }),
+  })
+  const data = await response.json() as { embedding: number[] }
+  return data.embedding
+}
