@@ -62,17 +62,25 @@ export async function run(url: string): Promise<void> {
   const embeddings = await Promise.all(
     allChunks.map(chunk =>
       limit(async () => {
-        const vector = await embed(chunk.text)
-        process.stdout.write(`\r  ${++done}/${allChunks.length}`)
-        return vector
+        try {
+          const vector = await embed(chunk.text)
+          process.stdout.write(`\r  ${++done}/${allChunks.length}`)
+          return vector
+        } catch {
+          process.stdout.write(`\r  ${++done}/${allChunks.length} (embed failed)`)
+          return null
+        }
       })
     )
   )
+
+  const validChunks = allChunks.filter((_, i) => embeddings[i] !== null)
+  const validEmbeddings = embeddings.filter((e): e is number[] => e !== null)
   console.log(`\n✓ Embeddings done`)
 
   // 7. store in LanceDB
   console.log(`\nStoring in LanceDB...`)
-  await insertChunks(sourceId, allChunks, embeddings)
+  await insertChunks(sourceId, validChunks, validEmbeddings)
   console.log(`✓ Stored`)
 
   // 8. register source
@@ -81,11 +89,11 @@ export async function run(url: string): Promise<void> {
     name: new URL(url).hostname,
     url,
     indexedAt: new Date().toISOString(),
-    chunkCount: allChunks.length,
+    chunkCount: validChunks.length,
     embeddingModel: 'nomic-embed-text',
     embeddingDim: 768,
   })
 
-  console.log(`\n✓ Done — indexed ${allChunks.length} chunks from ${pages.length} pages`)
+  console.log(`\n✓ Done — indexed ${validChunks.length} chunks from ${pages.length} pages`)
   console.log(`  Source ID: ${sourceId}`)
 }

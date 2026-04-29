@@ -20,13 +20,31 @@ export async function checkHealth(): Promise<void> {
     throw new Error(`Embedding model not found. Run: ollama pull ${EMBEDDING_MODEL}`)
   }
 
-  if (!models.includes(CHAT_MODEL)) {
+  if (!models.includes(CHAT_MODEL.split(':')[0]) && !models.includes(CHAT_MODEL)) {
     throw new Error(`Chat model not found. Run: ollama pull ${CHAT_MODEL}`)
   }
 
   console.log("✓ Ollama is running")
   console.log(`✓ ${EMBEDDING_MODEL} available`)
   console.log(`✓ ${CHAT_MODEL} available`)
+}
+
+export async function chat(system: string, user: string): Promise<string> {
+  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(120_000),  // 2 min timeout
+    body: JSON.stringify({
+      model: CHAT_MODEL,
+      stream: false,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+  })
+  const data = await response.json() as { message: { content: string } }
+  return data.message.content
 }
 
 export async function embed(text: string): Promise<number[]> {

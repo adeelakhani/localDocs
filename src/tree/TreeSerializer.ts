@@ -28,3 +28,21 @@ export function flattenTree(tree: TreeNode[]): Map<string, TreeNode> {
   walk(tree)
   return map
 }
+
+// given a set of node IDs, return those IDs plus all their descendants
+// so picking "Developers > Api" also includes "Developers > Api > Webhooks" etc
+export function getDescendantIds(nodeIds: string[], nodeMap: Map<string, TreeNode>): string[] {
+  const result = new Set<string>()
+  function walk(id: string) {
+    const node = nodeMap.get(id)
+    if (!node) return
+    result.add(id)
+    for (const child of node.children) {
+      walk(child.id)
+    }
+  }
+  for (const id of nodeIds) {
+    walk(id)
+  }
+  return Array.from(result)
+}
