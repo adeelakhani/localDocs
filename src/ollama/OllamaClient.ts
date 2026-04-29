@@ -1,10 +1,11 @@
 // Talks to Ollama REST API via native fetch
+import { getConfig } from '../config/ConfigManager.js'
 
 const OLLAMA_BASE_URL = "http://localhost:11434"
 const EMBEDDING_MODEL = "nomic-embed-text"
-const CHAT_MODEL = "llama3.2"
 
 export async function checkHealth(): Promise<void> {
+  const { chatModel } = getConfig()
   let data: { models: { name: string }[] }
 
   try {
@@ -20,22 +21,23 @@ export async function checkHealth(): Promise<void> {
     throw new Error(`Embedding model not found. Run: ollama pull ${EMBEDDING_MODEL}`)
   }
 
-  if (!models.includes(CHAT_MODEL.split(':')[0]) && !models.includes(CHAT_MODEL)) {
-    throw new Error(`Chat model not found. Run: ollama pull ${CHAT_MODEL}`)
+  if (!models.includes(chatModel.split(':')[0]) && !models.includes(chatModel)) {
+    throw new Error(`Chat model not found. Run: ollama pull ${chatModel}`)
   }
 
   console.log("✓ Ollama is running")
   console.log(`✓ ${EMBEDDING_MODEL} available`)
-  console.log(`✓ ${CHAT_MODEL} available`)
+  console.log(`✓ ${chatModel} available`)
 }
 
 export async function chat(system: string, user: string): Promise<string> {
+  const { chatModel } = getConfig()
   const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     signal: AbortSignal.timeout(120_000),  // 2 min timeout
     body: JSON.stringify({
-      model: CHAT_MODEL,
+      model: chatModel,
       stream: false,
       messages: [
         { role: 'system', content: system },
