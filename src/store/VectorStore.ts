@@ -1,5 +1,5 @@
 import * as lancedb from '@lancedb/lancedb'
-import { makeArrowTable } from '@lancedb/lancedb'
+import { makeArrowTable, MatchQuery } from '@lancedb/lancedb'
 import { Schema, Field, Utf8, Int32, FixedSizeList, Float32 } from 'apache-arrow'
 import fs from 'fs'
 import path from 'path'
@@ -8,6 +8,7 @@ import type { Chunk } from '../chunker/Chunker.js'
 
 const DB_PATH = path.join(os.homedir(), '.localdocs', 'db')
 const EMBEDDING_DIM = 768
+const RRF_K = 60  // standard RRF constant — higher = less aggressive rank fusion
 
 function getSchema(): Schema {
   return new Schema([
@@ -53,7 +54,10 @@ export async function insertChunks(
     await db.dropTable(sourceId)
   }
 
-  await db.createTable(sourceId, table)
+  const createdTable = await db.createTable(sourceId, table)
+
+  // create FTS index on text column for BM25 search
+  await createdTable.createIndex('text', { config: lancedb.Index.fts() })
 }
 
 export interface SearchResult {
@@ -67,9 +71,37 @@ export interface SearchResult {
   score: number
 }
 
+// merge two ranked lists using Reciprocal Rank Fusion
+// score = 1/(k + rank) summed across both lists
+// chunks appearing in both lists score higher than chunks in only one
+function rrfMerge(
+  vectorResults: SearchResult[],
+  bm25Results: SearchResult[],
+  topK: number
+): SearchResult[] {
+  const scores = new Map<string, number>()
+  const chunkMap = new Map<string, SearchResult>()
+
+  vectorResults.forEach((r, i) => {
+    scores.set(r.id, (scores.get(r.id) ?? 0) + 1 / (RRF_K + i + 1))
+    chunkMap.set(r.id, r)
+  })
+
+  bm25Results.forEach((r, i) => {
+    scores.set(r.id, (scores.get(r.id) ?? 0) + 1 / (RRF_K + i + 1))
+    chunkMap.set(r.id, r)
+  })
+
+  return Array.from(scores.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topK)
+    .map(([id, score]) => ({ ...chunkMap.get(id)!, score }))
+}
+
 export async function search(
   sourceId: string,
   queryVector: number[],
+  query: string,
   nodeIds: string[] | null,  // null = search everything (full-corpus fallback)
   topK = 10
 ): Promise<SearchResult[]> {
@@ -79,23 +111,43 @@ export async function search(
 
   const table = await db.openTable(sourceId)
 
-  let query = table.vectorSearch(queryVector).limit(topK)
+  const whereClause = nodeIds && nodeIds.length > 0
+    ? `treeNodeId IN (${nodeIds.map(id => `'${id}'`).join(', ')})`
+    : undefined
 
-  if (nodeIds && nodeIds.length > 0) {
-    const idList = nodeIds.map(id => `'${id}'`).join(', ')
-    query = query.where(`treeNodeId IN (${idList})`)
+  // run vector search and BM25 in parallel
+  const fetchK = topK * 2  // fetch more than needed before RRF merge
+
+  const [vectorRows, bm25Rows] = await Promise.all([
+    (whereClause
+      ? table.vectorSearch(queryVector).where(whereClause).limit(fetchK)
+      : table.vectorSearch(queryVector).limit(fetchK)
+    ).toArray(),
+    (whereClause
+      ? table.search(new MatchQuery(query, 'text')).where(whereClause).limit(fetchK)
+      : table.search(new MatchQuery(query, 'text')).limit(fetchK)
+    ).toArray(),
+  ])
+
+  const toResults = (rows: Record<string, unknown>[]): SearchResult[] =>
+    rows.map(row => ({
+      id: String(row.id),
+      sourceId: String(row.sourceId),
+      treeNodeId: String(row.treeNodeId),
+      treePath: String(row.treePath),
+      url: String(row.url),
+      pageTitle: String(row.pageTitle),
+      text: String(row.text),
+      score: Number(row._distance ?? row._score ?? 0),
+    }))
+
+  return rrfMerge(toResults(vectorRows), toResults(bm25Rows), topK)
+}
+
+export async function deleteSource(sourceId: string): Promise<void> {
+  const db = await lancedb.connect(DB_PATH)
+  const tableNames = await db.tableNames()
+  if (tableNames.includes(sourceId)) {
+    await db.dropTable(sourceId)
   }
-
-  const results = await query.toArray()
-
-  return results.map(row => ({
-    id: String(row.id),
-    sourceId: String(row.sourceId),
-    treeNodeId: String(row.treeNodeId),
-    treePath: String(row.treePath),
-    url: String(row.url),
-    pageTitle: String(row.pageTitle),
-    text: String(row.text),
-    score: Number(row._distance ?? 0),
-  }))
 }

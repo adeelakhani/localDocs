@@ -27,14 +27,14 @@ export async function searchSource(
 
   // nodeIds is null if tree was too big — fall back to full-corpus search
   if (!nodeIds) {
-    const results = await search(sourceId, queryVector, null, TOP_K)
+    const results = await search(sourceId, queryVector, query, null, TOP_K)
     return rerank(query, results)
   }
 
   // expand selected node IDs to include all their descendants
   const expandedIds = getDescendantIds(nodeIds, nodeMap)
 
-  let results = await search(sourceId, queryVector, expandedIds, TOP_K)
+  let results = await search(sourceId, queryVector, query, expandedIds, TOP_K)
   let reranked = await rerank(query, results)
   let usedNodeIds = nodeIds
   let attempts = 1
@@ -46,14 +46,14 @@ export async function searchSource(
 
     // if LLM can't suggest new nodes, fall back to full-corpus
     if (!retryNodeIds || retryNodeIds.length === 0) {
-      results = await search(sourceId, queryVector, null, TOP_K)
+      results = await search(sourceId, queryVector, query, null, TOP_K)
       reranked = await rerank(query, results)
       break
     }
 
     usedNodeIds = [...usedNodeIds, ...retryNodeIds]
     const retryExpandedIds = getDescendantIds(retryNodeIds, nodeMap)
-    results = await search(sourceId, queryVector, retryExpandedIds, TOP_K)
+    results = await search(sourceId, queryVector, query, retryExpandedIds, TOP_K)
     reranked = await rerank(query, results)
   }
 
