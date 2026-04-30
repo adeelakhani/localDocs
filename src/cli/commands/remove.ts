@@ -1,6 +1,6 @@
 import type { Command } from 'commander'
 import { deleteSource } from '../../store/VectorStore.js'
-import { removeSource } from '../../store/SourceRegistry.js'
+import { removeSource, getSource } from '../../store/SourceRegistry.js'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
@@ -11,6 +11,11 @@ export function registerRemove(program: Command): void {
     .description('remove an indexed source and all its data')
     .action(async (sourceId: string) => {
       try {
+        const source = getSource(sourceId)
+        if (!source) {
+          console.error(`Source not found: ${sourceId}`)
+          process.exit(1)
+        }
         await deleteSource(sourceId)
         removeSource(sourceId)
 
