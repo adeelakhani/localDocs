@@ -1,8 +1,0 @@
----
-description: Loads project instructions from cursor.md at repository root
-alwaysApply: true
----
-
-Follow the project instructions in:
-
-@cursor.md

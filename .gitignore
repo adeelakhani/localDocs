@@ -148,3 +148,10 @@ tmp/
 
 # Crawlee local storage (moved to ~/.localdocs/crawlee-storage in production)
 storage/
+
+#.cursor
+.cursor/
+
+# Editor config
+.cursor/
+.vscode/
