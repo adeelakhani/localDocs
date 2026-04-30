@@ -27,7 +27,8 @@
     "p-limit": "^7.3.0",
     "playwright": "^1.59.1",
     "robots-txt-parser": "^2.0.3",
-    "sitemapper": "^4.1.5"
+    "sitemapper": "^4.1.5",
+    "zod": "^4.4.1"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
