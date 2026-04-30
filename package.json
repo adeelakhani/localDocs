@@ -1,6 +1,6 @@
 {
   "name": "@adeel712/localdocs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local-first documentation indexer and natural language search. No cloud, no API keys, runs entirely on your machine via Ollama.",
   "type": "module",
   "main": "dist/cli/index.js",
@@ -15,12 +15,20 @@
     "prepublishOnly": "pnpm build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["docs", "search", "rag", "ollama", "mcp", "local", "ai"],
+  "keywords": [
+    "docs",
+    "search",
+    "rag",
+    "ollama",
+    "mcp",
+    "local",
+    "ai"
+  ],
   "author": "Adeel Akhani",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adeelakhani/localdocs"
+    "url": "git+https://github.com/adeelakhani/localdocs.git"
   },
   "homepage": "https://github.com/adeelakhani/localdocs#readme",
   "packageManager": "pnpm@10.31.0",
