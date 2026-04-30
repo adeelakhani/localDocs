@@ -45,7 +45,7 @@ The result: you can search vague natural language like "how do I handle side eff
 ## Install
 
 ```bash
-npm install -g local-docs
+npm install -g @adeel712/localdocs
 ```
 
 ---
