@@ -1,0 +1,13 @@
+src/
+tmp/
+dist/src/
+dist/tmp/
+dist/mcp/
+.claude/
+.github/
+*.md
+!README.md
+tsconfig.json
+pnpm-lock.yaml
+.gitignore
+.npmignore
