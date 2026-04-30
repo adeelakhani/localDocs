@@ -1,19 +1,23 @@
 {
-  "name": "localDocs",
+  "name": "local-docs",
   "version": "1.0.0",
-  "description": "",
+  "description": "Local-first documentation indexer and natural language search. No cloud, no API keys, runs entirely on your machine via Ollama.",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/cli/index.js",
   "bin": {
     "localdocs": "dist/cli/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "pnpm build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["docs", "search", "rag", "ollama", "mcp", "local", "ai"],
+  "author": "Adeel Akhani",
+  "license": "MIT",
   "packageManager": "pnpm@10.31.0",
   "dependencies": {
     "@lancedb/lancedb": "^0.27.2",
