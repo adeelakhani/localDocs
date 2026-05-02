@@ -19,12 +19,12 @@ export async function run(url: string): Promise<void> {
   await checkHealth()
 
   // 2. crawl
-  console.log(`\nCrawling ${url}...`)
+  console.error(`\nCrawling ${url}...`)
   const crawledUrls = await crawl(url)
-  console.log(`✓ Found ${crawledUrls.length} URLs`)
+  console.error(`✓ Found ${crawledUrls.length} URLs`)
 
   // 3. extract each page
-  console.log(`\nExtracting pages...`)
+  console.error(`\nExtracting pages...`)
   const pages = []
   for (const crawledUrl of crawledUrls) {
     const pageUrl = crawledUrl.url
@@ -42,28 +42,28 @@ export async function run(url: string): Promise<void> {
     const result = extractPage(html, pageUrl)
     if (result) {
       pages.push({ url: pageUrl, depth, ...result })
-      process.stdout.write(`\r  ${pages.length}/${crawledUrls.length} pages extracted`)
+      process.stderr.write(`\r  ${pages.length}/${crawledUrls.length} pages extracted`)
     }
   }
-  console.log(`\n✓ Extracted ${pages.length} pages`)
+  console.error(`\n✓ Extracted ${pages.length} pages`)
 
   // 4. build tree
-  console.log(`\nBuilding tree...`)
+  console.error(`\nBuilding tree...`)
   const tree = buildTree(pages, sourceId)
   saveTree(sourceId, tree)
   const nodeMap = flattenTree(tree)
-  console.log(`✓ Tree saved`)
+  console.error(`✓ Tree saved`)
 
   // 5. chunk
-  console.log(`\nChunking pages...`)
+  console.error(`\nChunking pages...`)
   const allChunks = []
   for (const page of pages) {
     allChunks.push(...chunkPage(page, sourceId, nodeMap))
   }
-  console.log(`✓ ${allChunks.length} chunks`)
+  console.error(`✓ ${allChunks.length} chunks`)
 
   // 6. embed with concurrency limit
-  console.log(`\nEmbedding chunks...`)
+  console.error(`\nEmbedding chunks...`)
   const limit = pLimit(EMBED_CONCURRENCY)
   let done = 0
   const embeddings = await Promise.all(
@@ -71,10 +71,10 @@ export async function run(url: string): Promise<void> {
       limit(async () => {
         try {
           const vector = await embed(chunk.text)
-          process.stdout.write(`\r  ${++done}/${allChunks.length}`)
+          process.stderr.write(`\r  ${++done}/${allChunks.length}`)
           return vector
         } catch {
-          process.stdout.write(`\r  ${++done}/${allChunks.length} (embed failed)`)
+          process.stderr.write(`\r  ${++done}/${allChunks.length} (embed failed)`)
           return null
         }
       })
@@ -83,12 +83,12 @@ export async function run(url: string): Promise<void> {
 
   const validChunks = allChunks.filter((_, i) => embeddings[i] !== null)
   const validEmbeddings = embeddings.filter((e): e is number[] => e !== null)
-  console.log(`\n✓ Embeddings done`)
+  console.error(`\n✓ Embeddings done`)
 
   // 7. store in LanceDB
-  console.log(`\nStoring in LanceDB...`)
+  console.error(`\nStoring in LanceDB...`)
   await insertChunks(sourceId, validChunks, validEmbeddings)
-  console.log(`✓ Stored`)
+  console.error(`✓ Stored`)
 
   // 8. register source
   await registerSource({
@@ -101,6 +101,6 @@ export async function run(url: string): Promise<void> {
     embeddingDim: 768,
   })
 
-  console.log(`\n✓ Done — indexed ${validChunks.length} chunks from ${pages.length} pages`)
-  console.log(`  Source ID: ${sourceId}`)
+  console.error(`\n✓ Done — indexed ${validChunks.length} chunks from ${pages.length} pages`)
+  console.error(`  Source ID: ${sourceId}`)
 }

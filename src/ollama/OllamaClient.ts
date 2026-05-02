@@ -25,9 +25,9 @@ export async function checkHealth(): Promise<void> {
     throw new Error(`Chat model not found. Run: ollama pull ${chatModel}`)
   }
 
-  console.log("✓ Ollama is running")
-  console.log(`✓ ${EMBEDDING_MODEL} available`)
-  console.log(`✓ ${chatModel} available`)
+  console.error("✓ Ollama is running")
+  console.error(`✓ ${EMBEDDING_MODEL} available`)
+  console.error(`✓ ${chatModel} available`)
 }
 
 export async function chat(

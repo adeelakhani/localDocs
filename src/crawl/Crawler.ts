@@ -12,23 +12,23 @@ export async function crawl(rootUrl: string): Promise<CrawledUrl[]> {
   const rootPath = new URL(rootUrl).pathname.replace(/\/$/, '')
 
   // 1. try sitemap first
-  console.log(`Checking sitemap...`)
+  console.error(`Checking sitemap...`)
   const sitemapResults = await fetchSitemap(rootUrl)
   if (sitemapResults) {
-    console.log(`✓ Sitemap found — ${sitemapResults.length} URLs`)
+    console.error(`✓ Sitemap found — ${sitemapResults.length} URLs`)
     return sitemapResults
   }
 
   // 2. fall back to CheerioCrawler
-  console.log(`No sitemap — crawling with CheerioCrawler...`)
+  console.error(`No sitemap — crawling with CheerioCrawler...`)
   const { urls: cheerioResults, jsFlaggedUrls } = await crawlWithCheerio(rootUrl)
-  console.log(`✓ CheerioCrawler found — ${cheerioResults.length} URLs`)
+  console.error(`✓ CheerioCrawler found — ${cheerioResults.length} URLs`)
 
   // 3. re-fetch JS-rendered pages with Playwright
   if (jsFlaggedUrls.length > 0) {
-    console.log(`Re-fetching ${jsFlaggedUrls.length} JS-rendered pages with Playwright...`)
+    console.error(`Re-fetching ${jsFlaggedUrls.length} JS-rendered pages with Playwright...`)
     const playwrightResults = await crawlWithPlaywright(jsFlaggedUrls, rootPath)
-    console.log(`✓ Playwright found — ${playwrightResults.length} URLs`)
+    console.error(`✓ Playwright found — ${playwrightResults.length} URLs`)
     return [...cheerioResults, ...playwrightResults]
   }
 

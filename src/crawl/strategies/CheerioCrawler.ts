@@ -27,7 +27,7 @@ export async function crawlWithCheerio(rootUrl: string): Promise<CheerioCrawlRes
       const isJsRendered = appShell.length > 0 && appShell.text().trim().length === 0
 
       if (isJsRendered) {
-        console.log(`  [js] ${url}`)
+        console.error(`  [js] ${url}`)
         jsFlagged.push(url)
         return
       }
