@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
+import { createRequire } from 'module'
+const { version } = createRequire(import.meta.url)('../../package.json') as { version: string }
 import { registerAdd } from './commands/add.js'
 import { registerSearch } from './commands/search.js'
 import { registerList } from './commands/list.js'
@@ -15,7 +17,7 @@ const program = new Command()
 program
   .name('localdocs')
   .description('Local-first documentation indexer and search')
-  .version('1.0.0')
+  .version(version)
 
 registerAdd(program)
 registerSearch(program)
