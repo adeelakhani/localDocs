@@ -30,7 +30,11 @@ export async function checkHealth(): Promise<void> {
   console.log(`✓ ${chatModel} available`)
 }
 
-export async function chat(system: string, user: string): Promise<string> {
+export async function chat(
+  system: string,
+  user: string,
+  options?: { temperature?: number; num_predict?: number; num_ctx?: number }
+): Promise<string> {
   const { chatModel } = getConfig()
   const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
     method: 'POST',
@@ -39,6 +43,7 @@ export async function chat(system: string, user: string): Promise<string> {
     body: JSON.stringify({
       model: chatModel,
       stream: false,
+      options,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },

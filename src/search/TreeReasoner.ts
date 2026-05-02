@@ -84,6 +84,10 @@ export async function reason(
 
   const userMessage = `Documentation tree:\n${treeText}\n${excludeNote}\n\nQuery: ${query}`
 
-  const response = await chat(TREE_REASONING_PROMPT, userMessage)
+  const response = await chat(TREE_REASONING_PROMPT, userMessage, {
+    temperature: 0,
+    num_predict: 200,
+    num_ctx: 32768,
+  })
   return parseNodeIds(response)
 }
