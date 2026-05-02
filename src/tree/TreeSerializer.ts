@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import type { TreeNode } from './TreeBuilder.js'
+import { clearCache } from '../search/ReasoningCache.js'
 
 const BASE_DIR = path.join(os.homedir(), '.localdocs')
 
@@ -9,6 +10,7 @@ export function saveTree(sourceId: string, tree: TreeNode[]): void {
   const dir = path.join(BASE_DIR, 'sources', sourceId)
   fs.mkdirSync(dir, { recursive: true })
   fs.writeFileSync(path.join(dir, 'tree.json'), JSON.stringify(tree, null, 2))
+  clearCache(sourceId)  // tree changed — old reasoning results are stale
 }
 
 export function loadTree(sourceId: string): TreeNode[] | null {

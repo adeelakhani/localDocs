@@ -22,7 +22,7 @@ export async function searchSource(
   // embed query and run tree reasoning in parallel
   const [queryVector, nodeIds] = await Promise.all([
     embed(query),
-    reason(tree, query),
+    reason(sourceId, tree, query),
   ])
 
   // nodeIds is null if tree was too big — fall back to full-corpus search
@@ -42,7 +42,7 @@ export async function searchSource(
   // retry loop — if reranker found nothing, try different nodes
   while (reranked.length === 0 && attempts < MAX_RETRIES) {
     attempts++
-    const retryNodeIds = await reason(tree, query, usedNodeIds)
+    const retryNodeIds = await reason(sourceId, tree, query, usedNodeIds)
 
     // if LLM can't suggest new nodes, fall back to full-corpus
     if (!retryNodeIds || retryNodeIds.length === 0) {

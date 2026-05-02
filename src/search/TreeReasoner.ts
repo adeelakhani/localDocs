@@ -1,5 +1,6 @@
 import { chat } from '../ollama/OllamaClient.js'
 import { TREE_REASONING_PROMPT } from './prompts.js'
+import { withCache } from './ReasoningCache.js'
 import type { TreeNode } from '../tree/TreeBuilder.js'
 
 const FULL_TREE_THRESHOLD = 1000   // send full tree if total nodes < this
@@ -63,6 +64,7 @@ function parseNodeIds(response: string): string[] | null {
 }
 
 export async function reason(
+  sourceId: string,
   tree: TreeNode[],
   query: string,
   excludeNodeIds: string[] = []
@@ -72,8 +74,20 @@ export async function reason(
   // site is massive — skip tree reasoning, search everything
   if (nodeCount > LARGE_TREE_THRESHOLD) return null
 
-  // small site — send full tree for maximum precision
-  // large site — send top 2 levels only to stay within context window
+  // only cache initial attempts (not retries with excluded nodes)
+  if (excludeNodeIds.length === 0) {
+    return withCache(sourceId, query, () => runReasoning(tree, nodeCount, query, excludeNodeIds))
+  }
+
+  return runReasoning(tree, nodeCount, query, excludeNodeIds)
+}
+
+async function runReasoning(
+  tree: TreeNode[],
+  nodeCount: number,
+  query: string,
+  excludeNodeIds: string[]
+): Promise<string[] | null> {
   const treeText = nodeCount <= FULL_TREE_THRESHOLD
     ? formatTree(tree)
     : formatTreeDepthLimited(tree)
