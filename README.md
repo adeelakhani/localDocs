@@ -179,16 +179,81 @@ Add this to your MCP client's config:
 
 The server launches automatically when your client starts and stays running for the session.
 
-Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`, `clear_cache`
+Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`, `clear_cache`, `tips`
+
+The `tips` tool returns best practices for agents — when to scope URLs, how to handle terminology mismatches, how the cache works, and how to debug bad results.
+
+---
+
+## Model selection
+
+localdocs uses two models — one for embeddings (fixed) and one for reasoning (configurable).
+
+**Embedding model:** `nomic-embed-text` — fixed, do not change. It's specifically optimised for retrieval and all stored vectors depend on it.
+
+**Chat model:** handles tree navigation and reranking. Default is `phi4-mini`.
+
+We benchmarked 10+ models for this task. Key findings:
+
+| Model | Size | Quality | Speed | Notes |
+|---|---|---|---|---|
+| `phi4-mini` | 2.5GB | Good | Fast | Default. Best balance for most use cases. |
+| `llama3.2` | 2GB | Acceptable | Fastest | Good fallback if phi4-mini isn't available |
+| `qwen2.5:14b` | 9GB | Good | Slow | Marginally better on large sites |
+| `gemma4:26b` | 17GB | Excellent | Very slow | Best quality but ~5 min per cold search |
+| `mistral:7b` | 4.4GB | Poor | Medium | Not recommended — hallucinates node IDs |
+| `deepseek-coder:6.7b` | 3.8GB | Poor | Medium | Not recommended — worst accuracy tested |
+
+Switch models any time:
+```bash
+localdocs config set chatModel gemma4:26b
+```
+
+**Important:** the first search on a site is slow (the LLM reads the full page tree). Subsequent searches on the same site are fast thanks to the semantic cache — the LLM result is reused for similar queries.
 
 ---
 
 ## Tips
 
-- Sites with a `sitemap.xml` index most reliably - check by visiting `<domain>/sitemap.xml`
-- Use `-s <sourceId>` when searching a specific source for more precise results
-- Larger Ollama models give better reasoning quality: `localdocs config set chatModel llama3.3:70b`
-- Re-index any source with `localdocs add <url>` to pick up new content
+**Indexing**
+- Sites with a `sitemap.xml` index most reliably and completely. Check at `<domain>/sitemap.xml` before indexing.
+- Scope your index to the relevant path: `localdocs add https://docs.example.com/api` only indexes `/api/*`.
+- JavaScript-rendered sites are handled automatically via a Playwright fallback — no extra setup needed.
+- Re-index any time with `localdocs add <url>` to pick up new content. The source ID stays stable.
+
+**Searching**
+- Always use `-s <sourceId>` when you have multiple sources — scoped search is significantly more reliable.
+- If results feel wrong, try rephrasing. "OAuth flow" and "how do I authorize a user" may route to different tree nodes.
+- Run `localdocs cache clear <sourceId>` after rephrasing to force fresh LLM reasoning on the next search.
+- `localdocs cache stats` shows how many queries are cached per source.
+
+**Performance**
+- First search on a site: ~5-15s (LLM reads tree, caches result).
+- Repeat or similar searches: ~2-3s (cache hit, no LLM call).
+- The cache is per-source and cleared automatically on re-index.
+- Larger models improve cold-search quality but the cache means you only pay the cost once per unique query.
+
+---
+
+## Known limitations
+
+**Tree navigation on large sites**
+
+localdocs scopes search by asking a local LLM to read a list of all page names and pick the relevant ones. For small sites (under ~150 pages) this works reliably. For large sites (300+ pages), small models (under ~20B parameters) can pick the wrong section, especially when the site uses product-specific naming that doesn't match common terminology.
+
+Examples of tricky cases tested:
+- "OAuth flow" → page is called "Individual Connect" (Cronofy's name for OAuth)
+- "serverless functions" → page is called "Edge Functions" (Supabase's name)
+- "charge a customer" → page is called "PaymentIntent" (Stripe's abstraction)
+
+**Workarounds:**
+- Use a larger model: `localdocs config set chatModel gemma4:26b` — 26B+ models handle this well
+- Rephrase to match the site's own terminology
+- The semantic cache means once a query routes correctly, similar queries reuse the result
+
+**JS-rendered sites**
+
+Sites that render content via JavaScript are crawled with a Playwright fallback. This works for most sites but may miss pages on heavily dynamic sites.
 
 ---
 

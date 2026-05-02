@@ -136,6 +136,47 @@ export async function startServer(): Promise<void> {
     }
   )
 
+  server.tool(
+    'tips',
+    'Get tips and best practices for using localdocs effectively as an agent.',
+    {},
+    async () => {
+      const text = `# localdocs — Agent Usage Tips
+
+## Before searching
+- Call list first to see available sources and their sourceIds.
+- Always pass sourceId to search when you know which site to look in — scoped search is much more accurate than searching all sources at once.
+
+## Indexing
+- Scope the URL to the section you need: add https://docs.stripe.com/api instead of https://docs.stripe.com — faster and more focused.
+- Sites with a sitemap.xml index most completely. Check at <domain>/sitemap.xml.
+- Re-run add on an existing source to refresh its content. Source ID stays stable.
+- JavaScript-rendered sites are handled automatically.
+
+## Searching
+- Use the site's own terminology, not generic terms. Examples from real sites:
+  - Stripe calls charges "PaymentIntents" not "charges"
+  - Cronofy calls OAuth "Individual Connect" not "OAuth flow"
+  - Supabase calls serverless functions "Edge Functions" not "serverless functions"
+  - Twilio uses "TwiML" for call flows, not "automated calls"
+- If results look wrong, try rephrasing with the site's own language.
+- If rephrasing doesn't help, call clear_cache for that source then search again — forces fresh LLM tree navigation.
+
+## Performance
+- First search on a source: ~5-15 seconds (LLM reads the full page tree).
+- Repeat or similar searches: ~2-3 seconds (cached, no LLM call).
+- The cache is cleared automatically when a source is re-indexed.
+
+## Debugging bad results
+1. Call tree on the source to see the page structure the LLM navigates.
+2. Look for the section that should contain the answer — check if it exists.
+3. If it exists but wasn't returned, clear_cache and retry with terminology closer to the section name.
+4. If the site is large (300+ pages), consider indexing a more specific sub-path.`
+
+      return { content: [{ type: 'text', text }] }
+    }
+  )
+
   const transport = new StdioServerTransport()
   await server.connect(transport)
 }
