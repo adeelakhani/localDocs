@@ -179,9 +179,9 @@ Add this to your MCP client's config:
 
 The server launches automatically when your client starts and stays running for the session.
 
-Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`, `clear_cache`, `tips`
+Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`, `clear_cache`, `how_to_use`
 
-The `tips` tool returns best practices for agents — when to scope URLs, how to handle terminology mismatches, how the cache works, and how to debug bad results.
+The `how_to_use` tool returns best practices for agents — when to scope URLs, how to handle terminology mismatches, how the cache works, and how to debug bad results. Call it once when getting started.
 
 ---
 

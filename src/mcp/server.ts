@@ -137,8 +137,8 @@ export async function startServer(): Promise<void> {
   )
 
   server.tool(
-    'tips',
-    'Get tips and best practices for using localdocs effectively as an agent.',
+    'how_to_use',
+    'Get best practices for using localdocs effectively. Call this once when getting started to understand how to index sites, search accurately, and handle common issues.',
     {},
     async () => {
       const text = `# localdocs — Agent Usage Tips
