@@ -1,5 +1,7 @@
-import { CheerioCrawler } from 'crawlee'
+import { CheerioCrawler, log } from 'crawlee'
 import type { CrawledUrl } from '../Crawler.js'
+
+log.setLevel(log.LEVELS.OFF)
 
 interface CheerioCrawlResult {
   urls: CrawledUrl[]

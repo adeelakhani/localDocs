@@ -1,5 +1,7 @@
-import { PlaywrightCrawler } from 'crawlee'
+import { PlaywrightCrawler, log } from 'crawlee'
 import type { CrawledUrl } from '../Crawler.js'
+
+log.setLevel(log.LEVELS.OFF)
 
 export async function crawlWithPlaywright(urls: string[], rootPath: string): Promise<CrawledUrl[]> {
   const found = new Map<string, { depth: number; html: string }>()
