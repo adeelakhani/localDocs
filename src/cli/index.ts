@@ -8,6 +8,7 @@ import { registerRemove } from './commands/remove.js'
 import { registerCheck } from './commands/check.js'
 import { registerConfig } from './commands/config.js'
 import { registerServe } from './commands/serve.js'
+import { registerCache } from './commands/cache.js'
 
 const program = new Command()
 
@@ -24,5 +25,6 @@ registerRemove(program)
 registerCheck(program)
 registerConfig(program)
 registerServe(program)
+registerCache(program)
 
 program.parse(process.argv)

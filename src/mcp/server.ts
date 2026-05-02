@@ -7,6 +7,7 @@ import { listSources, getSource, removeSource } from '../store/SourceRegistry.js
 import { deleteSource } from '../store/VectorStore.js'
 import { loadTree } from '../tree/TreeSerializer.js'
 import { checkHealth } from '../ollama/OllamaClient.js'
+import { clearCache } from '../search/ReasoningCache.js'
 import type { TreeNode } from '../tree/TreeBuilder.js'
 import fs from 'fs'
 import path from 'path'
@@ -113,6 +114,25 @@ export async function startServer(): Promise<void> {
     async () => {
       await checkHealth()
       return { content: [{ type: 'text', text: '✓ Ollama is running and models are available.' }] }
+    }
+  )
+
+  server.tool(
+    'clear_cache',
+    'Clear the reasoning cache for a source or all sources. Useful if search results feel stale or you want to force fresh LLM tree reasoning.',
+    { sourceId: z.string().optional().describe('Source ID to clear. If omitted, clears cache for all sources.') },
+    async ({ sourceId }) => {
+      const sources = listSources()
+      if (sourceId) {
+        const source = getSource(sourceId)
+        if (!source) {
+          return { content: [{ type: 'text', text: `Source not found: ${sourceId}` }], isError: true }
+        }
+        clearCache(sourceId)
+        return { content: [{ type: 'text', text: `✓ Cleared cache for ${sourceId}` }] }
+      }
+      for (const source of sources) clearCache(source.id)
+      return { content: [{ type: 'text', text: `✓ Cleared cache for ${sources.length} source(s)` }] }
     }
   )
 

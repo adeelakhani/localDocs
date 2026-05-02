@@ -6,7 +6,7 @@ const LOCALDOCS_DIR = path.join(os.homedir(), '.localdocs')
 const CONFIG_PATH = path.join(LOCALDOCS_DIR, 'config.json')
 
 const DEFAULT_CONFIG = {
-  chatModel: 'llama3.2',
+  chatModel: 'phi4-mini',
 }
 
 export type Config = typeof DEFAULT_CONFIG

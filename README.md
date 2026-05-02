@@ -37,7 +37,7 @@ The result: you can search vague natural language like "how do I handle side eff
 - Pull the required models:
   ```bash
   ollama pull nomic-embed-text   # embedding model - converts text to vectors
-  ollama pull llama3.2           # chat model - tree reasoning + reranking
+  ollama pull phi4-mini          # chat model - tree reasoning + reranking
   ```
 
 ---
@@ -129,6 +129,21 @@ Remove a source and all its data - vectors, tree, registry entry.
 
 ---
 
+### `localdocs cache`
+
+Manage the reasoning cache. localdocs caches which tree nodes the LLM picks for each query — repeat and similar searches skip the LLM entirely and return instantly.
+
+```bash
+localdocs cache stats                      # show entry count per source
+localdocs cache stats docs-cronofy-com     # show for one source
+localdocs cache clear                      # clear all caches
+localdocs cache clear docs-cronofy-com     # clear one source's cache
+```
+
+The cache is cleared automatically when you re-index a source. Clear it manually if search results feel stale.
+
+---
+
 ### `localdocs check`
 
 Verify Ollama is running and required models are pulled. Run this first if anything seems broken.
@@ -142,7 +157,7 @@ localdocs config show
 localdocs config set chatModel gemma3:27b
 ```
 
-The chat model handles tree reasoning and reranking. Default is `llama3.2`. Any model pulled in Ollama works - larger models improve search quality, smaller models are faster.
+The chat model handles tree reasoning and reranking. Default is `phi4-mini`. Any model pulled in Ollama works - larger models improve search quality, smaller models are faster.
 
 The embedding model is fixed as `nomic-embed-text`. It is specifically optimised for retrieval and changing it would invalidate all stored vectors.
 
@@ -164,7 +179,7 @@ Add this to your MCP client's config:
 
 The server launches automatically when your client starts and stays running for the session.
 
-Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`
+Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`, `clear_cache`
 
 ---
 
@@ -185,5 +200,6 @@ Available tools: `search`, `add`, `list`, `tree`, `remove`, `check`
 ├── config.json           # config (chatModel etc.)
 ├── db/                   # LanceDB vector + BM25 indexes
 └── sources/<id>/
-    └── tree.json         # section tree per source
+    ├── tree.json         # section tree per source
+    └── reasoning-cache.json  # cached LLM tree reasoning results
 ```
