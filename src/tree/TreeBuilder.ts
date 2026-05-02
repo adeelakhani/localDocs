@@ -79,7 +79,9 @@ export function buildTree(pages: PageData[], sourceId: string): TreeNode[] {
 
     if (existing) {
       existing.url = page.url
-      existing.children = headingChildren
+      // Prepend heading children but preserve any sub-page nodes already appended
+      // to this container — overwriting would orphan them from flattenTree's walk
+      existing.children = [...headingChildren, ...existing.children]
     } else {
       const leafNode: TreeNode = {
         id: nodeId(sourceId, pathKey),

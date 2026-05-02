@@ -6,19 +6,28 @@ const FULL_TREE_THRESHOLD = 1000   // send full tree if total nodes < this
 const LARGE_TREE_THRESHOLD = 5000  // if total nodes > this, skip reasoning entirely
 const FALLBACK_DEPTH = 2           // depth limit used only when tree is large
 
-// count all nodes in the tree regardless of depth
+// count navigable nodes (excludes heading leaves, which are chunking detail)
 function countAllNodes(nodes: TreeNode[]): number {
-  let count = nodes.length
+  let count = 0
   for (const node of nodes) {
+    if (isHeadingNode(node)) continue
+    count++
     count += countAllNodes(node.children)
   }
   return count
 }
 
-// format full tree as flat indented list
+// heading nodes are tree leaves added per-page for chunking — they're not
+// useful for LLM navigation and bloat the tree text massively, so skip them
+function isHeadingNode(node: TreeNode): boolean {
+  return node.url === null && node.children.length === 0
+}
+
+// format full tree as flat indented list, omitting heading nodes
 function formatTree(nodes: TreeNode[], depth = 0): string {
   const lines: string[] = []
   for (const node of nodes) {
+    if (isHeadingNode(node)) continue
     lines.push(`${'  '.repeat(depth)}[${node.id}] ${node.treePath}`)
     const childLines = formatTree(node.children, depth + 1)
     if (childLines) lines.push(childLines)
@@ -31,6 +40,7 @@ function formatTreeDepthLimited(nodes: TreeNode[], depth = 0): string {
   if (depth >= FALLBACK_DEPTH) return ''
   const lines: string[] = []
   for (const node of nodes) {
+    if (isHeadingNode(node)) continue
     lines.push(`${'  '.repeat(depth)}[${node.id}] ${node.treePath}`)
     const childLines = formatTreeDepthLimited(node.children, depth + 1)
     if (childLines) lines.push(childLines)

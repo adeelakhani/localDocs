@@ -5,6 +5,7 @@ import { crawlWithPlaywright } from './strategies/PlaywrightCrawler.js'
 export interface CrawledUrl {
   url: string
   depth: number
+  html?: string  // pre-rendered HTML from Playwright; skip re-fetch in Indexer if present
 }
 
 export async function crawl(rootUrl: string): Promise<CrawledUrl[]> {

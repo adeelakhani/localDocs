@@ -29,9 +29,16 @@ export async function run(url: string): Promise<void> {
   for (const crawledUrl of crawledUrls) {
     const pageUrl = crawledUrl.url
     const depth = crawledUrl.depth
-    const response = await fetch(pageUrl)
-    if (new URL(response.url).origin !== rootOrigin) continue
-    const html = await response.text()
+
+    let html: string
+    if (crawledUrl.html) {
+      html = crawledUrl.html
+    } else {
+      const response = await fetch(pageUrl)
+      if (new URL(response.url).origin !== rootOrigin) continue
+      html = await response.text()
+    }
+
     const result = extractPage(html, pageUrl)
     if (result) {
       pages.push({ url: pageUrl, depth, ...result })

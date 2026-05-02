@@ -155,3 +155,6 @@ storage/
 # Editor config
 .cursor/
 .vscode/
+
+# Claude Code local settings
+.claude/

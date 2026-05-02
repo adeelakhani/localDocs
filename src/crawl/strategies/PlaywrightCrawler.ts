@@ -2,24 +2,25 @@ import { PlaywrightCrawler } from 'crawlee'
 import type { CrawledUrl } from '../Crawler.js'
 
 export async function crawlWithPlaywright(urls: string[], rootPath: string): Promise<CrawledUrl[]> {
-  const found = new Map<string, number>()
+  const found = new Map<string, { depth: number; html: string }>()
 
   const crawler = new PlaywrightCrawler({
     maxConcurrency: 2,
     async requestHandler({ request, page }) {
       const url = request.loadedUrl ?? request.url
-      await page.waitForLoadState('domcontentloaded')
+      await page.waitForLoadState('networkidle')
+      const html = await page.content()
       const text = await page.innerText('body')
 
       if (text.trim().length > 200) {
-        found.set(url, getDepth(url, rootPath))
+        found.set(url, { depth: getDepth(url, rootPath), html })
       }
     },
   })
 
   await crawler.run(urls)
 
-  return Array.from(found.entries()).map(([url, depth]) => ({ url, depth }))
+  return Array.from(found.entries()).map(([url, { depth, html }]) => ({ url, depth, html }))
 }
 
 function getDepth(url: string, rootPath: string): number {

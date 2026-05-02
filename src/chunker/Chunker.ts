@@ -69,42 +69,48 @@ function splitHtmlIntoSections(
   headingTexts: Set<string>
 ): { heading: string | null; level: number; text: string }[] {
   const $ = cheerio.load(htmlContent)
-  const sections: { heading: string | null; level: number; text: string }[] = []
 
+  type Item = { type: 'heading'; text: string; level: number } | { type: 'text'; text: string }
+
+  // Recursively walk the DOM: headings become split points, container elements
+  // (section/article/div) are transparent, everything else yields its text.
+  function walk(el: any): Item[] {
+    const tag = (el.tagName ?? '').toLowerCase()
+
+    if (['h1', 'h2', 'h3', 'h4', 'h5'].includes(tag)) {
+      const raw = $(el).text().trim().replace(/\s*#$/, '')
+      if (headingTexts.has(raw)) {
+        return [{ type: 'heading', text: raw, level: parseInt(tag.slice(1)) }]
+      }
+    }
+
+    if (['section', 'article', 'div', 'main', 'header', 'footer'].includes(tag) || !tag) {
+      return $(el).children().toArray().flatMap(walk)
+    }
+
+    const text = $(el).text().trim()
+    return text ? [{ type: 'text', text }] : []
+  }
+
+  const items: Item[] = $('body').children().toArray().flatMap(walk)
+
+  const sections: { heading: string | null; level: number; text: string }[] = []
   let currentHeading: string | null = null
   let currentLevel = 1
   let currentParts: string[] = []
 
-  // drill down through single-child wrappers until we find the real content container
-  let root = $('body')
-  while (true) {
-    const children = root.children()
-    if (children.length !== 1) break
-    root = children.first()
-  }
-
-  root.children().each((_, el) => {
-    const tag = el.tagName?.toLowerCase() ?? ''
-    const isHeading = ['h1', 'h2', 'h3', 'h4'].includes(tag)
-
-    if (isHeading) {
-      const raw = $(el).text().trim().replace(/\s*#$/, '')
-      if (headingTexts.has(raw)) {
-        // save whatever we had so far
-        if (currentParts.length > 0) {
-          sections.push({ heading: currentHeading, level: currentLevel, text: currentParts.join('\n\n').trim() })
-        }
-        currentHeading = raw
-        currentLevel = parseInt(tag.replace('h', ''))
-        currentParts = []
-        return
+  for (const item of items) {
+    if (item.type === 'heading') {
+      if (currentParts.length > 0) {
+        sections.push({ heading: currentHeading, level: currentLevel, text: currentParts.join('\n\n').trim() })
       }
+      currentHeading = item.text
+      currentLevel = item.level
+      currentParts = []
+    } else {
+      currentParts.push(item.text)
     }
-
-    // all other elements — grab their text
-    const text = $(el).text().trim()
-    if (text) currentParts.push(text)
-  })
+  }
 
   if (currentParts.length > 0) {
     sections.push({ heading: currentHeading, level: currentLevel, text: currentParts.join('\n\n').trim() })

@@ -52,7 +52,7 @@ function extractHeadings(html: string): Heading[] {
   const $ = cheerio.load(html)
   const headings: Heading[] = []
 
-  $('h1, h2, h3').each((_, el) => {
+  $('h1, h2, h3, h4, h5').each((_, el) => {
     const level = parseInt(el.tagName.replace('h', ''))
     const raw = $(el).text().trim()
 
