@@ -154,7 +154,7 @@ Verify Ollama is running and required models are pulled. Run this first if anyth
 
 ```bash
 localdocs config show
-localdocs config set chatModel gemma3:27b
+localdocs config set chatModel gemma4:26b
 ```
 
 The chat model handles tree reasoning and reranking. Default is `phi4-mini`. Any model pulled in Ollama works - larger models improve search quality, smaller models are faster.
@@ -193,7 +193,7 @@ localdocs uses two models — one for embeddings (fixed) and one for reasoning (
 
 **Chat model:** handles tree navigation and reranking. Default is `phi4-mini`.
 
-We benchmarked 10+ models for this task. Key findings:
+Tested 10+ models for this task. Key findings:
 
 | Model | Size | Quality | Speed | Notes |
 |---|---|---|---|---|
