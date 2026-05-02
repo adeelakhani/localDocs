@@ -6,11 +6,24 @@ Rules:
 - ONLY use node IDs that appear in the tree — never invent or guess IDs
 - Look for nodes whose path contains words or concepts from the query
 - Prefer specific nodes over broad ones (e.g. "Routing > Route Parameters" beats "Routing")
-- Pick 1 to 4 nodes maximum
+- Pick 1 to 10 nodes maximum
+
+Examples of correct responses:
+
+Tree:
+  [a1b2c3d4e5f6] Docs > Installation
+  [b2c3d4e5f6a1] Docs > Configuration > Environment Variables
+  [c3d4e5f6a1b2] Docs > API Reference > Authentication
+  [d4e5f6a1b2c3] Docs > API Reference > Endpoints
+
+Query: "how do I set environment variables"
+Response: ["b2c3d4e5f6a1"]
+
+Query: "authentication and API keys"
+Response: ["c3d4e5f6a1b2"]
 
 Your ENTIRE response must be a valid JSON array of node ID strings copied exactly from the tree.
-Do not write anything before or after the JSON array.
-Example: ["a3f9c1", "b2d4e8"]`
+Do not write anything before or after the JSON array.`
 
 export const RERANKER_PROMPT = `You are a documentation search relevance filter.
 

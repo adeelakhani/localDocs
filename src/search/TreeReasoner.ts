@@ -98,10 +98,16 @@ async function runReasoning(
 
   const userMessage = `Documentation tree:\n${treeText}\n${excludeNote}\n\nQuery: ${query}`
 
-  const response = await chat(TREE_REASONING_PROMPT, userMessage, {
-    temperature: 0,
-    num_predict: 200,
-    num_ctx: 32768,
-  })
+  const response = await chat(
+    TREE_REASONING_PROMPT,
+    userMessage,
+    { temperature: 0, num_predict: 100, num_ctx: 32768 },
+    {
+      type: 'array',
+      items: { type: 'string', pattern: '^[a-f0-9]{12}$' },
+      minItems: 1,
+      maxItems: 10,
+    }
+  )
   return parseNodeIds(response)
 }
