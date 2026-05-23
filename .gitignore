@@ -158,3 +158,9 @@ storage/
 
 # Claude Code local settings
 .claude/
+
+# Swift / SwiftPM build artifacts
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/xcuserdata/

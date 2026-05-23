@@ -185,6 +185,21 @@ The `how_to_use` tool returns best practices for agents — when to scope URLs, 
 
 ---
 
+## macOS app (experimental)
+
+A native SwiftUI window for searching your indexed docs, in `mac/`. Wraps the CLI — same engine, native UI.
+
+Requirements: macOS 13+, Swift toolchain (ships with Xcode or Command Line Tools), `localdocs` on your `PATH`, Ollama running.
+
+```bash
+cd mac
+swift run
+```
+
+A search window opens — type a query, hit return, click a result to open the source URL in your browser. Cmd+Q to quit.
+
+---
+
 ## Model selection
 
 localdocs uses two models — one for embeddings (fixed) and one for reasoning (configurable).
